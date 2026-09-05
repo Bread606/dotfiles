@@ -1,0 +1,345 @@
+/* ── Wal-generated palette — imported first so everything below can reference it
+ *  File is written by the wallpaper scripts after each colour extraction run.
+ *  A default version ships alongside this file so waybar never breaks on
+ *  first launch before wal has run.
+ *  ─────────────────────────────────────────────────────────────────────────── */
+@import "colors.css";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  BASE RESET
+ *  ───────────────────────────────────────────────────────────────────────── */
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "JetBrainsMono Nerd Font", "Font Awesome 6 Free", monospace;
+    font-size: 14px;
+    min-height: 0;
+}
+
+window#waybar {
+    background: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  SHARED MODULE BASE — Blue-Black Metallic pill
+ *  ───────────────────────────────────────────────────────────────────────── */
+#workspaces,
+#window,
+#clock,
+#cpu,
+#temperature,
+#memory,
+#disk,
+#battery,
+#network,
+#pulseaudio,
+#custom-media,
+#tray {
+background: linear-gradient(
+    180deg,
+    rgba(10,  18,  42,  0.98) 0%,
+                            rgba(4,   10,  26,  1.00) 40%,
+                            rgba(8,   15,  35,  0.99) 70%,
+                            rgba(14,  22,  50,  0.97) 100%
+);
+padding: 0 16px;
+margin: 4px 3px;
+min-height: 34px;
+border-radius: 20px;
+color: @foreground;
+
+/* Top/left highlight uses the wal primary accent */
+border-top:    1px solid alpha(@wal_accent, 0.45);
+border-left:   1px solid alpha(@wal_accent, 0.25);
+border-right:  1px solid rgba(4,  6,  14, 0.80);
+border-bottom: 1px solid rgba(4,  6,  14, 0.90);
+
+transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  PER-MODULE ACCENT LEFT BORDER — colours pulled from the wal palette
+ *  ───────────────────────────────────────────────────────────────────────── */
+#cpu              { border-left: 2px solid alpha(@wal_accent,         0.85); }
+#temperature      { border-left: 2px solid alpha(@wal_accent_bright,  0.75); }
+#memory           { border-left: 2px solid alpha(@wal_accent,         0.80); }
+#disk             { border-left: 2px solid alpha(@wal_accent2,        0.80); }
+#battery          { border-left: 2px solid alpha(@wal_accent_bright,  0.70); }
+#network          { border-left: 2px solid alpha(@wal_accent,         0.80); }
+#pulseaudio       { border-left: 2px solid alpha(@wal_accent2,        0.75); }
+#custom-media     { border-left: 2px solid alpha(@wal_accent2_bright, 0.70); }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  HOVER GLOW — accent tinted dark background
+ *  ───────────────────────────────────────────────────────────────────────── */
+#cpu:hover,
+#temperature:hover,
+#memory:hover,
+#disk:hover,
+#network:hover,
+#pulseaudio:hover,
+#custom-media:hover,
+#battery:hover {
+background: linear-gradient(
+    180deg,
+    alpha(@wal_accent, 0.18) 0%,
+                            alpha(@wal_accent, 0.10) 100%
+);
+border-top: 1px solid alpha(@wal_accent_bright, 0.55);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  WORKSPACES
+ *  ───────────────────────────────────────────────────────────────────────── */
+#workspaces {
+padding: 0 8px;
+}
+
+#workspaces button {
+padding: 0 12px;
+color: alpha(@wal_text, 0.50);
+border-radius: 30px;
+margin: 4px 2px;
+transition: all 0.25s ease;
+background: transparent;
+font-size: 15px;
+}
+
+#workspaces button:hover {
+color: @foreground;
+background: alpha(@wal_accent, 0.20);
+}
+
+#workspaces button.active {
+color: @foreground;
+background: linear-gradient(
+    180deg,
+    alpha(@wal_accent, 0.55) 0%,
+                            alpha(@wal_accent, 0.35) 100%
+);
+border-top:    1px solid alpha(@wal_accent_bright, 0.55);
+border-bottom: 1px solid rgba(4, 8, 25, 0.70);
+font-weight: bold;
+}
+
+#workspaces button.urgent {
+color: @foreground;
+background: alpha(@wal_warn, 0.30);
+animation: urgent-blink 1s ease-in-out infinite;
+}
+
+@keyframes urgent-blink {
+    from { opacity: 1;   }
+    50%  { opacity: 0.6; }
+    to   { opacity: 1;   }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  WINDOW TITLE
+ *  ───────────────────────────────────────────────────────────────────────── */
+#custom-window {
+background: linear-gradient(
+    180deg,
+    rgba(10, 18, 42, 0.98) 0%,
+                            rgba(4,  10, 26, 1.00) 45%,
+                            rgba(8,  15, 35, 0.99) 100%
+);
+padding: 0 16px;
+margin: 4px;
+min-height: 34px;
+border-radius: 20px;
+color: alpha(@wal_text, 0.85);
+border-top:    1px solid alpha(@wal_accent,  0.40);
+border-left:   1px solid alpha(@wal_accent,  0.20);
+border-right:  1px solid rgba(4,  6,  14, 0.80);
+border-bottom: 1px solid rgba(4,  6,  14, 0.90);
+font-weight: 500;
+font-style: italic;
+}
+
+#custom-window.empty {
+padding: 0;
+margin: 0;
+border: none;
+background: transparent;
+opacity: 0;
+min-width: 0;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  CLOCK
+ *  ───────────────────────────────────────────────────────────────────────── */
+#clock {
+background: linear-gradient(
+    180deg,
+    rgba(16, 30, 70, 0.99) 0%,
+                            rgba(6,  12, 32, 1.00) 50%,
+                            rgba(12, 22, 55, 0.99) 100%
+);
+color: @foreground;
+font-weight: bold;
+font-size: 15px;
+padding: 0 24px;
+min-height: 34px;
+border-top:    1px solid alpha(@wal_accent_bright, 0.55);
+border-left:   1px solid alpha(@wal_accent,        0.30);
+border-right:  1px solid rgba(4,  6,  14, 0.85);
+border-bottom: 1px solid rgba(4,  6,  14, 0.95);
+transition: background 0.25s ease;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  MEDIA PLAYER
+ *  ───────────────────────────────────────────────────────────────────────── */
+#custom-media {
+font-style: italic;
+color: @foreground;
+}
+
+#custom-media.paused {
+color: alpha(@wal_text, 0.50);
+font-style: normal;
+}
+
+#custom-media.stopped {
+opacity: 0;
+min-width: 0;
+padding: 0;
+margin: 0;
+border: none;
+background: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  TEMPERATURE
+ *  ───────────────────────────────────────────────────────────────────────── */
+#temperature { color: @foreground; }
+
+#temperature.critical {
+color: @foreground;
+border-left: 2px solid alpha(@wal_warn, 0.90);
+animation: battery-critical 1s ease-in-out infinite;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  BATTERY
+ *  ───────────────────────────────────────────────────────────────────────── */
+#battery.good     { color: @foreground; }
+#battery.plugged  { color: @foreground; }
+
+#battery.charging {
+color: @foreground;
+border-left: 2px solid alpha(@wal_success, 0.85);
+}
+
+#battery.warning:not(.charging) {
+color: @foreground;
+border-left: 2px solid alpha(@wal_warn, 0.90);
+animation: battery-warning 2s ease-in-out infinite;
+}
+
+#battery.critical:not(.charging) {
+color: @foreground;
+border-left: 2px solid rgba(255, 50, 50, 0.95);
+animation: battery-critical 1s ease-in-out infinite;
+}
+
+@keyframes battery-warning {
+    from { opacity: 1;    }
+    50%  { opacity: 0.60; }
+    to   { opacity: 1;    }
+}
+
+@keyframes battery-critical {
+    from { opacity: 1;    }
+    50%  { opacity: 0.70; }
+    to   { opacity: 1;    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  NETWORK
+ *  ───────────────────────────────────────────────────────────────────────── */
+#network.disconnected {
+color: @foreground;
+border-left: 2px solid rgba(255, 50, 50, 0.90);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  PULSEAUDIO
+ *  ───────────────────────────────────────────────────────────────────────── */
+#pulseaudio.muted {
+color: alpha(@wal_text_dim, 0.60);
+border-left: 2px solid alpha(@wal_text_dim, 0.35);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  TRAY
+ *  ───────────────────────────────────────────────────────────────────────── */
+#tray { padding: 0 12px; }
+
+#tray > .passive        { -gtk-icon-effect: dim; }
+#tray > .needs-attention {
+-gtk-icon-effect: highlight;
+animation: tray-attention 1s ease-in-out infinite;
+}
+
+@keyframes tray-attention {
+    from { opacity: 1;    }
+    50%  { opacity: 0.65; }
+    to   { opacity: 1;    }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  LAUNCHER
+ *  ───────────────────────────────────────────────────────────────────────── */
+#custom-launcher {
+background: linear-gradient(
+    180deg,
+    rgba(10, 18, 45, 0.99) 0%,
+                            rgba(4,  10, 28, 1.00) 50%,
+                            rgba(8,  15, 38, 0.99) 100%
+);
+border-top:    1px solid alpha(@wal_accent,  0.45);
+border-left:   1px solid alpha(@wal_accent,  0.25);
+border-right:  1px solid rgba(4,  6,  14, 0.80);
+border-bottom: 1px solid rgba(4,  6,  14, 0.90);
+border-radius: 20px;
+color: @wal_accent;
+font-size: 22px;
+padding: 0 12px;
+margin: 4px;
+min-height: 34px;
+transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+#custom-launcher:hover {
+background: linear-gradient(
+    180deg,
+    alpha(@wal_accent, 0.25) 0%,
+                            alpha(@wal_accent, 0.15) 100%
+);
+border-top: 1px solid alpha(@wal_accent_bright, 0.65);
+color: @wal_accent_bright;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ *  TOOLTIP
+ *  ───────────────────────────────────────────────────────────────────────── */
+tooltip {
+    background: linear-gradient(
+        180deg,
+        rgba(10, 18, 48, 0.99) 0%,
+                                rgba(4,  10, 28, 1.00) 100%
+    );
+    border-top:    1px solid alpha(@wal_accent,  0.50);
+    border-left:   1px solid alpha(@wal_accent,  0.28);
+    border-right:  1px solid rgba(4,  6,  14, 0.80);
+    border-bottom: 1px solid rgba(4,  6,  14, 0.90);
+    border-radius: 20px;
+    color: @foreground;
+}
+
+tooltip label {
+    color: @foreground;
+    padding: 8px;
+}

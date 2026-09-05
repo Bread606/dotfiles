@@ -1,0 +1,287 @@
+# See dunst(5) for all configuration options
+
+[global]
+    ### Display ###
+
+    # Which monitor should the notifications be displayed on.
+    monitor = 0
+
+    # Display notification on focused monitor.  Possible modes are:
+    #   mouse: follow mouse pointer
+    #   keyboard: follow window with keyboard focus
+    #   none: don't follow anything
+    follow = none
+
+    ### Geometry ###
+
+    # Dynamic width for modern look
+    width = (300, 400)
+
+    # Dynamic height with reasonable bounds
+    height = (80, 300)
+
+    # Position the notification in the top right corner
+    origin = top-right
+
+    # Offset from the origin - increased for better spacing
+    offset = (20, 60)
+
+    # Scale factor. It is auto-detected if value is 0.
+    scale = 0
+
+    # Maximum number of notification (0 means no limit)
+    notification_limit = 5
+
+    ### Progress bar ###
+
+    # Turn on the progress bar
+    progress_bar = true
+
+    # Set the progress bar height with frame
+    progress_bar_height = 12
+
+    # Set the frame width of the progress bar
+    progress_bar_frame_width = 1
+
+    # Set the minimum width for the progress bar
+    progress_bar_min_width = 150
+
+    # Set the maximum width for the progress bar
+    progress_bar_max_width = 380
+
+    # Rounded corners for progress bar
+    progress_bar_corner_radius = 6
+
+    # Round all corners of progress bar
+    progress_bar_corners = all
+
+    ### Timeout Progress Bar ###
+
+    # Show a progress bar that indicates notification timeout
+    # This creates a visual countdown showing how long until the notification disappears
+    indicate_timeout = true
+
+    # Position of the timeout indicator
+    # Options: top, bottom
+    timeout_bar_position = bottom
+
+    # Height of the timeout bar in pixels
+    timeout_bar_height = 3
+
+    # Make the timeout bar span the full width
+    timeout_bar_full_width = true
+
+    # Rounded icon corners
+    icon_corner_radius = 8
+
+    # Round all corners of icons
+    icon_corners = all
+
+    # Show how many messages are currently hidden
+    indicate_hidden = yes
+
+    # Transparency for subtle effect
+    transparency = 10
+
+    # No separator, we'll use gap_size instead
+    separator_height = 0
+
+    # Comfortable padding
+    padding = 12
+
+    # Horizontal padding
+    horizontal_padding = 14
+
+    # Padding between text and icon
+    text_icon_padding = 12
+
+    # Thin modern frame
+    frame_width = 2
+
+    # Frame color (will be overridden per urgency)
+    frame_color = "#4a9eff"
+
+    # Gap between notifications for clean look
+    gap_size = 8
+
+    # Separator color
+    separator_color = frame
+
+    # Sort by urgency and update time
+    sort = yes
+
+    # Idle threshold
+    idle_threshold = 120
+
+    ### Text ###
+
+    # Modern, clean font - adjust to your installed fonts
+    # Options: "JetBrains Mono 10", "Fira Sans 10", "Roboto 10", "Ubuntu 10"
+    font = Ubuntu 10
+
+    # Line height for readability
+    line_height = 3
+
+    # Enable markup for formatted text
+    markup = full
+
+    # Format with bold summary
+    format = "<b>%s</b>\n%b"
+
+    # Text alignment
+    alignment = left
+
+    # Vertical alignment
+    vertical_alignment = center
+
+    # Show age threshold
+    show_age_threshold = 60
+
+    # Ellipsize in the middle
+    ellipsize = middle
+
+    # Don't ignore newlines
+    ignore_newline = no
+
+    # Stack duplicates
+    stack_duplicates = true
+
+    # Hide duplicate count
+    hide_duplicate_count = false
+
+    # Show indicators
+    show_indicators = yes
+
+    ### Icons ###
+
+    # Recursive icon lookup
+    enable_recursive_icon_lookup = true
+
+    # Icon theme - modern choice
+    icon_theme = Papirus-Dark, Adwaita
+
+    # Icon position
+    icon_position = left
+
+    # Minimum icon size
+    min_icon_size = 48
+
+    # Maximum icon size
+    max_icon_size = 64
+
+    ### History ###
+
+    # Sticky history
+    sticky_history = yes
+
+    # History length
+    history_length = 30
+
+    ### Misc/Advanced ###
+
+    # dmenu path
+    dmenu = /usr/bin/dmenu -p dunst:
+
+    # Browser for URLs
+    browser = /usr/bin/xdg-open
+
+    # Always run scripts
+    always_run_script = true
+
+    # Window title
+    title = Dunst
+
+    # Window class
+    class = Dunst
+
+    # Rounded corners for notifications
+    corner_radius = 12
+
+    # Round all corners
+    corners = all
+
+    # Don't ignore dbus close
+    ignore_dbusclose = false
+
+    ### Wayland ###
+    # layer = top
+    force_xwayland = false
+
+    ### Legacy
+    force_xinerama = false
+
+    ### Mouse Actions ###
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+
+    ### Animations ###
+    # Enable smooth slide-in animation from the right
+    # Available: slide_in, slide_out, fade_in, fade_out
+    # Direction: left, right, top, bottom
+
+    # Notification appearance animation
+    animation = slide_in
+    animation_direction = right
+    animation_duration = 300
+
+    # Notification disappearance animation
+    hide_animation = slide_out
+    hide_animation_direction = right
+    hide_animation_duration = 200
+
+# Experimental features
+[experimental]
+    per_monitor_dpi = false
+
+
+### Color Schemes per Urgency ###
+
+[urgency_low]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#89b4fa"
+    timeout = 8
+    default_icon = dialog-information
+    override_pause_level = 10
+
+[urgency_normal]
+    background = "#1e1e2e"
+    foreground = "#cdd6f4"
+    frame_color = "#89b4fa"
+    timeout = 10
+    default_icon = dialog-information
+    override_pause_level = 30
+
+[urgency_critical]
+    background = "#1e1e2e"
+    foreground = "#f38ba8"
+    frame_color = "#f38ba8"
+    timeout = 0
+    default_icon = dialog-warning
+    override_pause_level = 60
+
+
+### Custom Rules Examples ###
+
+# Stack volume notifications
+#[stack-volumes]
+#    summary = "Volume*"
+#    set_stack_tag = "volume"
+#    timeout = 2
+
+# Stack brightness notifications
+#[stack-brightness]
+#    summary = "Brightness*"
+#    set_stack_tag = "brightness"
+#    timeout = 2
+
+# Make Spotify notifications prettier
+#[spotify]
+#    appname = "Spotify"
+#    urgency = low
+#    background = "#1db954"
+#    foreground = "#ffffff"
+#    frame_color = "#1ed760"
+
+# vim: ft=cfg

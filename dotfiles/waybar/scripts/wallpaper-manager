@@ -1,0 +1,95 @@
+#!/bin/bash
+# Minimal wallpaper manager for autostart and rotation
+# Optimized for speed and low resource usage
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+CONFIG_DIR="$HOME/.config/wallpaper-manager"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+PID_FILE="$CONFIG_DIR/rotation.pid"
+mkdir -p "$CONFIG_DIR" "$WALLPAPER_DIR"
+# Fast config loader
+load_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        CURRENT_WALLPAPER=$(jq -r '.current_wallpaper // ""' "$CONFIG_FILE" 2>/dev/null)
+        AUTO_CHANGE=$(jq -r '.auto_change // false' "$CONFIG_FILE" 2>/dev/null)
+        INTERVAL_MINUTES=$(jq -r '.interval_minutes // 10' "$CONFIG_FILE" 2>/dev/null)
+    else
+        CURRENT_WALLPAPER=""
+        AUTO_CHANGE="false"
+        INTERVAL_MINUTES=10
+    fi
+}
+# Fast config saver
+save_config() {
+    echo "{\"current_wallpaper\":\"$CURRENT_WALLPAPER\",\"auto_change\":$AUTO_CHANGE,\"interval_minutes\":$INTERVAL_MINUTES}" > "$CONFIG_FILE"
+}
+# Set wallpaper function
+set_wallpaper() {
+    local wallpaper="$1"
+    pgrep -x awww-daemon > /dev/null || { awww-daemon & sleep 0.2; }
+    awww img "$wallpaper" --transition-type fade --transition-duration 0.5
+    wal -i "$wallpaper" -n -s -t
+    CURRENT_WALLPAPER="$wallpaper"
+    save_config
+}
+# Random wallpaper
+random_wallpaper() {
+    local wallpapers=("$WALLPAPER_DIR"/*.{jpg,jpeg,png,gif,webp,mp4,JPG,JPEG,PNG,WEBP})
+    local valid=()
+    for wp in "${wallpapers[@]}"; do
+        [[ -f "$wp" ]] && valid+=("$wp")
+    done
+    if [[ ${#valid[@]} -gt 0 ]]; then
+        set_wallpaper "${valid[RANDOM % ${#valid[@]}]}"
+    fi
+}
+# Start rotation daemon
+start_rotation() {
+    [[ -f "$PID_FILE" ]] && kill -0 $(cat "$PID_FILE") 2>/dev/null && return
+    (
+        echo $$ > "$PID_FILE"
+        while true; do
+            sleep $((INTERVAL_MINUTES * 60))
+            random_wallpaper
+        done
+    ) &
+}
+# Stop rotation daemon
+stop_rotation() {
+    [[ -f "$PID_FILE" ]] && kill $(cat "$PID_FILE") 2>/dev/null
+    rm -f "$PID_FILE"
+}
+# Main command handler
+case "${1:-}" in
+    init)
+        # Initialize on startup
+        load_config
+        # Set last wallpaper if exists
+        [[ -n "$CURRENT_WALLPAPER" && -f "$CURRENT_WALLPAPER" ]] && set_wallpaper "$CURRENT_WALLPAPER"
+        # Start rotation if enabled
+        [[ "$AUTO_CHANGE" == "true" ]] && start_rotation
+        ;;
+    set)
+        set_wallpaper "$2"
+        ;;
+    random)
+        random_wallpaper
+        ;;
+    start-rotation)
+        load_config
+        AUTO_CHANGE="true"
+        save_config
+        start_rotation
+        notify-send "Wallpaper Rotation" "Auto-change enabled (${INTERVAL_MINUTES}m intervals)"
+        ;;
+    stop-rotation)
+        load_config
+        AUTO_CHANGE="false"
+        save_config
+        stop_rotation
+        notify-send "Wallpaper Rotation" "Auto-change disabled"
+        ;;
+    *)
+        echo "Usage: $0 {init|set <path>|random|start-rotation|stop-rotation}"
+        exit 1
+        ;;
+esac

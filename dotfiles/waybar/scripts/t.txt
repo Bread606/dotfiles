@@ -1,0 +1,198 @@
+#!/bin/bash
+# Enhanced wallpaper picker with FZF, slideshow controls, and centered UI
+# Optimized for speed with slideshow management
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+CONFIG_DIR="$HOME/.config/wallpaper-manager"
+CONFIG_FILE="$CONFIG_DIR/config.json"
+MANAGER_SCRIPT="$HOME/.config/waybar/scripts/wallpaper-manager.sh"
+mkdir -p "$CONFIG_DIR" "$WALLPAPER_DIR"
+# Load current config
+load_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        CURRENT_WALLPAPER=$(jq -r '.current_wallpaper // ""' "$CONFIG_FILE" 2>/dev/null)
+        AUTO_CHANGE=$(jq -r '.auto_change // false' "$CONFIG_FILE" 2>/dev/null)
+        INTERVAL_MINUTES=$(jq -r '.interval_minutes // 10' "$CONFIG_FILE" 2>/dev/null)
+    else
+        CURRENT_WALLPAPER=""
+        AUTO_CHANGE="false"
+        INTERVAL_MINUTES=10
+    fi
+}
+# Save config with all settings
+save_config() {
+    echo "{\"current_wallpaper\":\"$CURRENT_WALLPAPER\",\"auto_change\":$AUTO_CHANGE,\"interval_minutes\":$INTERVAL_MINUTES}" > "$CONFIG_FILE"
+}
+# Fast wallpaper setting function
+set_wallpaper() {
+    local wallpaper="$1"
+    pgrep -x awww-daemon > /dev/null || { awww-daemon & sleep 0.2; }
+    awww img "$wallpaper" --transition-type fade --transition-duration 0.3
+    # Update and persist — do NOT call load_config here as it would
+    # overwrite CURRENT_WALLPAPER with the stale on-disk value
+    CURRENT_WALLPAPER="$wallpaper"
+    save_config
+    notify-send -t 1500 "🖼 Wallpaper Set" "$(basename "$wallpaper")" &
+}
+# Random wallpaper function
+set_random() {
+    local wallpapers=("$WALLPAPER_DIR"/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP})
+    local valid=()
+    for wp in "${wallpapers[@]}"; do
+        [[ -f "$wp" ]] && valid+=("$wp")
+    done
+    if [[ ${#valid[@]} -gt 0 ]]; then
+        local random_wp="${valid[RANDOM % ${#valid[@]}]}"
+        pgrep -x awww-daemon > /dev/null || { awww-daemon & sleep 0.2; }
+        awww img "$random_wp" --transition-type fade --transition-duration 0.3
+        CURRENT_WALLPAPER="$random_wp"
+        save_config
+        notify-send -t 1500 "🖼 Random Wallpaper" "$(basename "$random_wp")" &
+    fi
+}
+# Toggle slideshow
+toggle_slideshow() {
+    load_config
+    if [[ "$AUTO_CHANGE" == "true" ]]; then
+        bash "$MANAGER_SCRIPT" stop-rotation
+    else
+        bash "$MANAGER_SCRIPT" start-rotation
+    fi
+}
+# Change slideshow interval
+change_interval() {
+    load_config
+    local new_interval=$(echo -e "5\n10\n15\n30\n60" | fzf \
+        --prompt="⏱ Select interval (minutes): " \
+        --header="Choose slideshow interval" \
+        --height=40% \
+        --layout=reverse \
+        --border=rounded \
+        --color "border:#89b4fa,prompt:#f5c2e7,pointer:#f38ba8")
+    if [[ -n "$new_interval" ]]; then
+        INTERVAL_MINUTES="$new_interval"
+        save_config
+        # Restart rotation if active
+        if [[ "$AUTO_CHANGE" == "true" ]]; then
+            bash "$MANAGER_SCRIPT" stop-rotation
+            bash "$MANAGER_SCRIPT" start-rotation
+        fi
+        notify-send -t 1500 "⏱ Slideshow Timer" "Interval set to ${new_interval} minutes" &
+    fi
+}
+# Main continuous loop
+if command -v fzf &> /dev/null; then
+    cd "$WALLPAPER_DIR" || exit
+    # Continuous loop to keep picker open
+    while true; do
+        # Load config to show current state
+        load_config
+        # Get terminal dimensions for responsive sizing (recalculate each loop for resize support)
+        TERM_WIDTH=$(tput cols 2>/dev/null || echo 150)
+        TERM_HEIGHT=$(tput lines 2>/dev/null || echo 40)
+        # Calculate preview dimensions dynamically
+        PREVIEW_COLS=$((TERM_WIDTH / 2 - 4))
+        PREVIEW_LINES=$((TERM_HEIGHT - 10))
+        # Ensure minimum size
+        [[ $PREVIEW_COLS -lt 40 ]] && PREVIEW_COLS=40
+        [[ $PREVIEW_LINES -lt 20 ]] && PREVIEW_LINES=20
+        # Build header with current settings
+        if [[ "$AUTO_CHANGE" == "true" ]]; then
+            SLIDESHOW_STATUS="ON (${INTERVAL_MINUTES}m)"
+        else
+            SLIDESHOW_STATUS="OFF"
+        fi
+        # Simple, clear header
+        HEADER="Wallpaper Manager | Slideshow: $SLIDESHOW_STATUS
+ENTER=Set | ESC=Exit | CTRL-R=Random | CTRL-S=Slideshow | CTRL-T=Timer | CTRL-D=Delete"
+        # Get current wallpaper basename for default selection
+        CURRENT_BASENAME=""
+        if [[ -n "$CURRENT_WALLPAPER" && -f "$CURRENT_WALLPAPER" ]]; then
+            CURRENT_BASENAME=$(basename "$CURRENT_WALLPAPER")
+        fi
+        # Get list of all wallpapers
+        WALLPAPER_LIST=$(find . -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -printf "%f\n" | sort)
+        # Calculate position for current wallpaper
+        CURRENT_POS=1
+        if [[ -n "$CURRENT_BASENAME" ]]; then
+            CURRENT_POS=$(echo "$WALLPAPER_LIST" | grep -n "^${CURRENT_BASENAME}$" | cut -d: -f1)
+            [[ -z "$CURRENT_POS" ]] && CURRENT_POS=1
+        fi
+        # Check for kitty terminal with image support
+        if [[ "$TERM" == "xterm-kitty" ]] && command -v kitty &> /dev/null; then
+            # FZF with kitty image preview - fit image to preview box with dynamic sizing
+            result=$(echo "$WALLPAPER_LIST" | \
+                fzf --preview "kitty +kitten icat --clear --transfer-mode=memory --stdin=no --place=${PREVIEW_COLS}x${PREVIEW_LINES}@0x0 --scale-up --align=center {} 2>/dev/null" \
+                    --preview-window="right:50%" \
+                    --height=100% \
+                    --layout=reverse \
+                    --border=rounded \
+                    --prompt="Select wallpaper > " \
+                    --header="$HEADER" \
+                    --bind "load:pos($CURRENT_POS)" \
+                    --bind "ctrl-r:execute-silent(echo random > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-s:execute-silent(echo toggle_slideshow > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-t:execute-silent(echo change_interval > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-d:execute(trash {} 2>/dev/null || rm {})+reload(find . -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -printf '%f\n' | sort)" \
+                    --color "border:#89b4fa,prompt:#f5c2e7,pointer:#f38ba8,header:#cdd6f4")
+        else
+            # FZF without image preview (faster fallback)
+            result=$(echo "$WALLPAPER_LIST" | \
+                fzf --height=100% \
+                    --layout=reverse \
+                    --border=rounded \
+                    --prompt="Select wallpaper > " \
+                    --header="$HEADER" \
+                    --bind "load:pos($CURRENT_POS)" \
+                    --bind "ctrl-r:execute-silent(echo random > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-s:execute-silent(echo toggle_slideshow > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-t:execute-silent(echo change_interval > /tmp/wallpaper-action)+abort" \
+                    --bind "ctrl-d:execute(trash {} 2>/dev/null || rm {})+reload(find . -maxdepth 1 -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -printf '%f\n' | sort)" \
+                    --color "border:#89b4fa,prompt:#f5c2e7,pointer:#f38ba8,header:#cdd6f4")
+        fi
+        # Check if user pressed a control key
+        if [[ -f /tmp/wallpaper-action ]]; then
+            action=$(cat /tmp/wallpaper-action)
+            rm /tmp/wallpaper-action
+            case "$action" in
+                random)
+                    set_random
+                    continue
+                    ;;
+                toggle_slideshow)
+                    toggle_slideshow
+                    continue
+                    ;;
+                change_interval)
+                    change_interval
+                    continue
+                    ;;
+            esac
+        fi
+        # Handle normal selection
+        if [[ -z "$result" ]]; then
+            # User pressed ESC or cancelled
+            exit 0
+        elif [[ -n "$result" ]]; then
+            # User selected a wallpaper
+            set_wallpaper "$WALLPAPER_DIR/$result"
+            # Continue loop to show picker again
+        fi
+    done
+elif command -v rofi &> /dev/null; then
+    # Fallback to rofi
+    load_config
+    if [[ "$AUTO_CHANGE" == "true" ]]; then
+        SLIDESHOW_STATUS="ON (${INTERVAL_MINUTES}m)"
+    else
+        SLIDESHOW_STATUS="OFF"
+    fi
+    selected=$(find "$WALLPAPER_DIR" -maxdepth 1 -type f \( -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -printf "%f\n" | \
+        sort | \
+        rofi -dmenu -i -p "🎨 Wallpaper" \
+            -theme-str 'window {width: 50%; height: 60%;}' \
+            -theme-str 'listview {lines: 15;}' \
+            -mesg "Slideshow: $SLIDESHOW_STATUS | Enter: Set | Ctrl+R: Random")
+    [[ -n "$selected" ]] && set_wallpaper "$WALLPAPER_DIR/$selected"
+else
+    notify-send "Error" "Please install fzf or rofi for wallpaper selection" -u critical
+fi
